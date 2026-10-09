@@ -1,0 +1,17 @@
+# R session files
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# Generated data (kept in repo for demo, but exclude temp files)
+# data/job_market_clean.csv  # uncomment to exclude clean data from repo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch / temp
+scratch/
+*.tmp

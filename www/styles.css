@@ -1,0 +1,143 @@
+/* ==========================================================================
+   styles.css — CareerLens Academic Dashboard
+   ITA04: Statistics with R Programming
+   ========================================================================== */
+
+/* ---- Global ---- */
+body {
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  background-color: #f8f9fa;
+  color: #1a1a1a;
+}
+
+/* ---- Navbar ---- */
+.navbar {
+  background-color: #1E6091 !important;
+  border-bottom: 2px solid #155076;
+  padding: 0.4rem 1rem;
+}
+.navbar .navbar-brand,
+.navbar .nav-link {
+  color: #ffffff !important;
+}
+.navbar .nav-link.active,
+.navbar .nav-link:hover {
+  color: #a8d8f0 !important;
+  border-bottom: 2px solid #a8d8f0;
+}
+
+/* ---- Sidebar ---- */
+.sidebar {
+  background-color: #ffffff;
+  border-right: 1px solid #dee2e6;
+  padding: 1rem 0.75rem;
+}
+.sidebar-heading {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
+}
+
+/* ---- KPI Cards ---- */
+.kpi-card {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-top: 3px solid #1E6091;
+  border-radius: 4px;
+  padding: 0.75rem 0.9rem;
+  margin-bottom: 0.75rem;
+  min-height: 70px;
+}
+.kpi-label {
+  font-size: 0.72rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.2rem;
+}
+.kpi-value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1E6091;
+  margin: 0;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.kpi-value.kpi-sm {
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- Cards ---- */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #ffffff;
+  margin-bottom: 1rem;
+}
+.card-header {
+  background: #f1f3f5;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #343a40;
+  padding: 0.5rem 0.9rem;
+}
+
+/* ---- Prediction Result Box ---- */
+.pred-result-box {
+  background: #ffffff;
+  border: 1px solid #dee2e6;
+  border-top: 3px solid #1E6091;
+  border-radius: 4px;
+  padding: 0.9rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+/* ---- Tables ---- */
+.table {
+  font-size: 0.85rem;
+}
+.table th {
+  font-weight: 600;
+  color: #343a40;
+  background: #f8f9fa;
+}
+
+/* ---- Buttons ---- */
+.btn-primary {
+  background-color: #1E6091;
+  border-color: #1E6091;
+}
+.btn-primary:hover {
+  background-color: #155076;
+  border-color: #155076;
+}
+.btn-outline-secondary {
+  color: #6c757d;
+  border-color: #ced4da;
+}
+
+/* ---- Section spacing ---- */
+hr {
+  border-color: #dee2e6;
+  margin: 0.75rem 0;
+}
+
+/* ---- Plotly charts ---- */
+.js-plotly-plot .plotly {
+  border-radius: 2px;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .kpi-card { min-height: 55px; }
+  .kpi-value { font-size: 1.1rem; }
+}
