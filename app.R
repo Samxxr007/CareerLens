@@ -1032,10 +1032,16 @@ server <- function(input, output, session) {
   output$dq_missing <- renderDT({
     na_df <- data.frame(
       Column        = names(qr$na_counts),
-      `Missing Count` = as.integer(qr$na_counts),
-      `Missing %`   = round(qr$na_counts / qr$raw_rows * 100, 1)
-    ) |> dplyr::filter(`Missing Count` > 0) |>
-      dplyr::arrange(dplyr::desc(`Missing Count`))
+      missing_count = as.integer(qr$na_counts),
+      missing_pct   = round(as.integer(qr$na_counts) / qr$raw_rows * 100, 1),
+      stringsAsFactors = FALSE
+    ) |>
+      dplyr::filter(missing_count > 0) |>
+      dplyr::arrange(dplyr::desc(missing_count)) |>
+      dplyr::rename(
+        `Missing Count` = missing_count,
+        `Missing %`     = missing_pct
+      )
     DT::datatable(na_df, rownames=FALSE, options=list(pageLength=10),
                   class="table table-sm table-hover")
   })
