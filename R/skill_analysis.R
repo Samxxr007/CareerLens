@@ -68,6 +68,7 @@ parse_skills <- function(df) {
     tidyr::separate_rows(skills, sep=";") |>
     dplyr::mutate(skill = trimws(skills)) |>
     dplyr::filter(nzchar(skill)) |>
+    dplyr::distinct(job_id, skill, .keep_all = TRUE) |>
     dplyr::select(-skills)
 
   df_skills$skill_category <- get_skill_category(df_skills$skill)
@@ -101,14 +102,18 @@ role_skill_demand <- function(df, target_role, top_n = 15) {
   role_total <- nrow(role_df)
   if (role_total == 0) return(data.frame())
 
-  parse_skills(role_df) |>
+  res <- parse_skills(role_df) |>
     dplyr::count(skill, skill_category, name="job_count") |>
     dplyr::mutate(
       demand_pct = round(job_count / role_total * 100, 1),
       rank       = rank(-job_count, ties.method="min")
     ) |>
-    dplyr::arrange(rank) |>
-    dplyr::slice_head(n=top_n)
+    dplyr::arrange(rank)
+
+  if (!is.null(top_n) && is.finite(top_n)) {
+    res <- res |> dplyr::slice_head(n = top_n)
+  }
+  res
 }
 
 # -----------------------------------------------------------------------------

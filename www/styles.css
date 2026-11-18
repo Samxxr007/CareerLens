@@ -1,11 +1,11 @@
 /* ==========================================================================
-   styles.css — CareerLens Academic Dashboard
+   styles.css — CareerLens Academic Decision-Support Application
    ITA04: Statistics with R Programming
    ========================================================================== */
 
 /* ---- Global ---- */
 body {
-  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   background-color: #f8f9fa;
   color: #1a1a1a;
 }
@@ -14,23 +14,25 @@ body {
 .navbar {
   background-color: #1E6091 !important;
   border-bottom: 2px solid #155076;
-  padding: 0.4rem 1rem;
+  padding: 0.4rem 1.2rem;
 }
 .navbar .navbar-brand,
 .navbar .nav-link {
   color: #ffffff !important;
+  font-weight: 500;
+  font-size: 0.95rem;
 }
 .navbar .nav-link.active,
 .navbar .nav-link:hover {
-  color: #a8d8f0 !important;
-  border-bottom: 2px solid #a8d8f0;
+  color: #d0e7f9 !important;
+  border-bottom: 2px solid #d0e7f9;
 }
 
 /* ---- Sidebar ---- */
 .sidebar {
   background-color: #ffffff;
   border-right: 1px solid #dee2e6;
-  padding: 1rem 0.75rem;
+  padding: 1rem 0.85rem;
 }
 .sidebar-heading {
   font-size: 0.8rem;
@@ -38,6 +40,7 @@ body {
   letter-spacing: 0.06em;
   color: #6c757d;
   margin-bottom: 0.75rem;
+  font-weight: 600;
 }
 
 /* ---- KPI Cards ---- */
@@ -46,32 +49,90 @@ body {
   border: 1px solid #dee2e6;
   border-top: 3px solid #1E6091;
   border-radius: 4px;
-  padding: 0.75rem 0.9rem;
+  padding: 0.8rem 1rem;
   margin-bottom: 0.75rem;
-  min-height: 70px;
+  min-height: 75px;
 }
 .kpi-label {
   font-size: 0.72rem;
   color: #6c757d;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
 }
 .kpi-value {
-  font-size: 1.4rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: #1E6091;
   margin: 0;
   line-height: 1.2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 .kpi-value.kpi-sm {
-  font-size: 1rem;
+  font-size: 1.05rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.kpi-subtext {
+  font-size: 0.75rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
+/* ---- Metric Pill Badges ---- */
+.badge-matched {
+  background-color: #e8f5e9;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.badge-missing {
+  background-color: #ffebee;
+  color: #b71c1c;
+  border: 1px solid #ef9a9a;
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.badge-high-priority {
+  background-color: #ffebee;
+  color: #b71c1c;
+  border: 1px solid #ef9a9a;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.badge-med-priority {
+  background-color: #fff8e1;
+  color: #b45309;
+  border: 1px solid #fde68a;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.badge-add-priority {
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  border-radius: 3px;
+  font-size: 0.78rem;
+}
+.badge-delta-pos {
+  color: #198754;
+  font-weight: 700;
+}
+.badge-delta-neg {
+  color: #dc3545;
+  font-weight: 700;
 }
 
 /* ---- Cards ---- */
@@ -87,7 +148,28 @@ body {
   font-size: 0.85rem;
   font-weight: 600;
   color: #343a40;
-  padding: 0.5rem 0.9rem;
+  padding: 0.55rem 0.95rem;
+}
+
+/* ---- Academic Callouts & Disclaimers ---- */
+.academic-callout {
+  background: #f8f9fa;
+  border-left: 3px solid #1E6091;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.82rem;
+  color: #495057;
+  margin-bottom: 0.75rem;
+  border-radius: 0 4px 4px 0;
+}
+.academic-disclaimer {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  border-left: 4px solid #ffb300;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.8rem;
+  color: #5d4037;
+  margin-top: 0.75rem;
+  border-radius: 2px;
 }
 
 /* ---- Prediction Result Box ---- */
@@ -138,6 +220,6 @@ hr {
 
 /* ---- Responsive ---- */
 @media (max-width: 768px) {
-  .kpi-card { min-height: 55px; }
-  .kpi-value { font-size: 1.1rem; }
+  .kpi-card { min-height: 60px; }
+  .kpi-value { font-size: 1.15rem; }
 }

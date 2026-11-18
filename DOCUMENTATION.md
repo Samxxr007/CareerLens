@@ -1,295 +1,192 @@
 # DOCUMENTATION.md
-# CareerLens — Job Market Analysis Dashboard
-# ITA04: Statistics with R Programming — Academic Documentation
+# CareerLens — Interactive Career Decision-Support Application
+# ITA04: Statistics with R Programming — Academic Capstone Documentation
 
 ---
 
-## Aim
+## 1. Aim & Problem Statement
 
-To build an interactive job market analysis application using R and R Shiny that demonstrates data cleaning, exploratory data analysis (EDA), descriptive statistics, correlation analysis, regression modelling, and skill gap analysis on a synthetically-generated job market dataset.
+### Aim
+To design, implement, and validate an interactive career decision-support application using R and R Shiny that processes job-market data to enable students and job-seekers to evaluate their career fit, simulate skill acquisition scenarios, compare career trajectories, parse job descriptions, and predict compensation using statistically defensible regression models.
 
----
+### Problem Statement
+Static dashboards and labor-market summaries provide high-level averages but fail to answer individual questions such as:
+> *"Given my current skills and experience, which career paths fit my profile, what specific requirements am I missing, and how will acquiring a new skill impact my opportunities?"*
 
-## Problem Statement
-
-The IT job market is competitive and rapidly evolving. Job seekers often lack clear visibility into which skills are in highest demand, what salaries to expect for a given role and experience level, and where their skill gaps lie relative to their desired role. This project addresses these challenges by building an end-to-end analytics pipeline in R that processes job-posting data and delivers actionable insights through an interactive Shiny dashboard.
-
----
-
-## Objectives
-
-1. Generate a realistic synthetic job market dataset using R.
-2. Implement a data preprocessing pipeline that detects and corrects data quality issues.
-3. Perform Exploratory Data Analysis on job postings, skills, and salaries.
-4. Compute descriptive statistics (mean, median, mode, SD, variance, quartiles, percentiles).
-5. Calculate Pearson correlation between numerical variables.
-6. Build and evaluate a Simple Linear Regression model to predict salary from experience.
-7. Build a Multiple Linear Regression model using multiple predictors.
-8. Build a Logistic Regression model to classify high vs low salary outcomes.
-9. Implement a Skill Gap Analyzer that compares a candidate's skills against market demand.
-10. Present all results through an interactive academic-style Shiny dashboard.
+CareerLens transforms static data into an interactive decision-support system answering three fundamental questions:
+1. **What should I improve?** (Identified through role-specific skill gap analysis)
+2. **Why is this important according to the dataset?** (Evidence-backed through the Priority Index: $0.70 D_{\text{role}} + 0.30 D_{\text{market}}$, posting counts, and empirical co-occurrence)
+3. **What measurable difference does the proposed change make?** (Quantified in real time via the What-If Simulator with before/after coverage and overlap deltas)
 
 ---
 
-## Dataset Description
+## 2. Methodology & Mathematical Formulations
 
-| Property | Detail |
+### 2.1 Dataset Generation & Data Cleaning Pipeline
+- **Script**: `data/generate_data.R` using deterministic pseudo-random seeds (`set.seed(42)`).
+- **Volume**: 6,030 raw records generated $\to$ 30 duplicates removed $\to$ 6,000 clean records.
+- **Fictional Enterprise Pool**: 52 varied fictional companies (e.g., *Apex Analytics Labs, NexaTech Solutions, DataSphere Informatics, QuantumLogic Systems*) to prevent implying real hiring activities.
+- **Currency Standardization**: All compensation figures are standardized as synthetic annual INR-equivalent benchmarks across domestic and international locations.
+- **Preserved Missing Salaries**: 180 records with missing `salary_inr` are strictly preserved as `NA` (never silently imputed with group medians) to maintain statistical purity in regression modeling. These rows remain available for skill demand, location, and role frequency analyses that do not require salary.
+
+---
+
+### 2.2 Candidate Profile & Career Fit Engine
+
+CareerLens evaluates candidate alignment using three transparent, statistically defensible measures:
+
+#### A. Distinct Skill Coverage (%)
+Measures the proportion of distinct, recognized skills demanded for the target role that the candidate possesses:
+$$\text{Skill Coverage}_{\text{distinct}} = \frac{|\text{Candidate Skills} \cap \text{Role Distinct Skills}|}{|\text{Role Distinct Skills}|} \times 100\%$$
+
+#### B. Demand-Weighted Skill Coverage (%)
+Weights each recognized skill by its observed posting demand percentage ($D_s$) in the target role:
+$$\text{Skill Coverage}_{\text{weighted}} = \frac{\sum_{s \in \text{Matched}} D_s}{\sum_{s \in \text{All Role Skills}} D_s} \times 100\%$$
+
+#### C. Posting-Level Skill Overlap (≥ 80% Threshold)
+Calculates what percentage of individual job postings in that role have at least 80% of their requirements satisfied:
+$$\text{Overlap}_i = \frac{|\text{Candidate Skills} \cap \text{Posting}_i \text{ Skills}|}{|\text{Posting}_i \text{ Skills}|} \times 100\%$$
+$$\text{Posting-Level Match} = \frac{1}{N} \sum_{i=1}^N \mathbb{I}(\text{Overlap}_i \ge 80.0\%) \times 100\%$$
+
+*Note: Neither metric is represented as a probability of employment; they measure skill-requirement overlap.*
+
+---
+
+### 2.3 Priority Recommendation Engine
+
+To prioritize missing competencies without hardcoding or unverified claims, CareerLens uses an explainable ranking heuristic:
+
+$$\text{Priority Index} = 0.70 \times D_{\text{role}} + 0.30 \times D_{\text{market}}$$
+
+Where:
+- $D_{\text{role}} = \frac{N_{\text{role\_skill}}}{N_{\text{role}}} \times 100\%$ (Target role demand percentage)
+- $D_{\text{market}} = \frac{N_{\text{market\_skill}}}{N_{\text{total}}} \times 100\%$ (Global market demand percentage)
+
+#### Categorization Tiers
+- **HIGH PRIORITY**: $\text{Priority Index} \ge 35.0\%$ (frequently observed core requirements)
+- **MEDIUM PRIORITY**: $15.0\% \le \text{Priority Index} < 35.0\%$ (moderate-demand profile enhancers)
+- **ADDITIONAL SKILL**: $\text{Priority Index} < 15.0\%$ (niche or specialized tools)
+
+#### Empirical Co-occurrence Analysis
+For each recommended skill, the engine queries the subset of role postings requiring that skill and calculates the empirical percentage containing the candidate's existing skills (e.g., $77\%$ of MySQL postings also list Excel, $74\%$ list SQL). Co-occurrence reflects observed posting pairing, not a mandatory prerequisite.
+
+---
+
+### 2.4 What-If Simulator & Career Path Comparison
+
+#### What-If Deltas
+$$\Delta \text{Coverage} = \text{Skill Coverage}_{\text{Proposed}} - \text{Skill Coverage}_{\text{Baseline}}$$
+$$\Delta \text{Overlap} = \text{Posting Match}_{\text{Proposed}} - \text{Posting Match}_{\text{Baseline}}$$
+$$\text{Newly Satisfied Postings} = \sum_{i=1}^N \mathbb{I}(\text{Overlap}_{i, \text{base}} < 80\% \land \text{Overlap}_{i, \text{prop}} \ge 80\%)$$
+
+#### Career Path Comparison
+Evaluates shared transferable competencies between Role A and Role B:
+$$\text{Transferable Skills} = \text{Skills}_A \cap \text{Skills}_B$$
+$$\text{Unique to Role A} = \text{Skills}_A \setminus \text{Skills}_B, \quad \text{Unique to Role B} = \text{Skills}_B \setminus \text{Skills}_A$$
+
+---
+
+### 2.5 Offline Boundary-Aware Job Description Parsing
+
+Implemented in `R/job_description_analysis.R` using boundary-aware regex matching against a dictionary compiled from the clean dataset:
+- Boundary pattern: `(?i)(?<=[^a-zA-Z0-9+#]|^)<skill>(?=[^a-zA-Z0-9+#]|$)`
+- Handles special symbols: `C++`, `C#`, `.NET`, `Node.js`, `CI/CD`, `REST API`, `scikit-learn`, `Power BI`.
+- Standalone single-letter "R" regex: `(?<=[\\s,;./()\\[\\]{}:<>]|^)R(?=[\\s,;./()\\[\\]{}:<>]|$)` to prevent false positive substring collisions inside words like "Research" or "Requirements".
+
+---
+
+### 2.6 Statistical Modeling & Leak-Free Evaluation
+
+All models use a deterministic 80% Training / 20% Testing holdout partition (`set.seed(42)`) excluding missing salaries:
+
+#### A. Simple Linear Regression
+$$\text{salary\_inr} = \beta_0 + \beta_1 \cdot \text{experience\_years} + \epsilon$$
+
+#### B. Multiple Linear Regression
+$$\text{salary\_inr} = \beta_0 + \beta_1 \cdot \text{exp} + \beta_2 \cdot \text{skills} + \boldsymbol{\beta}_{\text{edu}} + \beta_4 \cdot \text{size} + \boldsymbol{\beta}_{\text{tier}} + \epsilon$$
+Evaluated with residual diagnostics (Standardized residuals vs Fitted values).
+
+#### C. Logistic Regression (High Salary Classifier)
+Binary outcome: $Y = 1$ if $\text{salary\_inr} \ge \text{Median}_{\text{train}}(\text{salary\_inr})$, else $0$.
+Threshold is computed strictly on the training partition to prevent data leakage.
+Evaluated on the 20% test partition:
+$$\text{Accuracy} = \frac{TP + TN}{\text{Total}}, \quad \text{Precision} = \frac{TP}{TP + FP}, \quad \text{Recall} = \frac{TP}{TP + FN}, \quad F_1 = \frac{2 \cdot P \cdot R}{P + R}$$
+
+#### D. Prediction Interval & Extrapolation Safety
+Point estimate with 95% individual prediction interval:
+$$\hat{y} \pm t_{n-p, 0.975} \cdot s \sqrt{1 + \mathbf{x}_0^T (\mathbf{X}^T \mathbf{X})^{-1} \mathbf{x}_0}$$
+Extrapolation safety checks warn when user inputs exceed the maximum observed training experience (18 years).
+
+---
+
+## 3. Test & Verification Results
+
+Executed via `tests/test_functions.R` and `validate.R`:
+- **Total Tests**: **76 / 76 Passed (100% Success)**.
+- **Dataset Checks**: 6,030 raw rows, 6,000 clean rows, 52 unique fictional companies, 180 preserved missing salaries.
+- **Career Fit & What-If**: Hand-crafted mathematical proofs verified (Distinct Coverage: 42.9%, Overlap $\ge 80\%$: 33.3%, Overlap $\ge 50\%$: 66.7%).
+- **Observed Holdout Model Performance**:
+  - SLR Train $R^2 = 0.2312$ | Test $R^2 = 0.2443$ | Test RMSE = ₹3,99,200
+  - MLR Train $R^2 = 0.4468$ | Test $R^2 = 0.4570$ | Test RMSE = ₹3,99,140
+  - Logistic Test Accuracy = 73.1% | Test Precision = 73.4% | Test F1 Score = 72.7%
+- **Shiny Application**: Successfully parsed and initialized as `shiny.appobj`.
+
+---
+
+## 4. Key Questions & Defenses for Capstone Viva
+
+| Viva Question | Concise Academic Answer |
 |---|---|
-| File | `data/job_market.csv` |
-| Generation Script | `data/generate_data.R` |
-| Records | ~6,030 (raw) |
-| Columns | 20 |
-| Primary Language | R |
-
-### Key Columns
-
-| Column | Type | Description |
-|---|---|---|
-| `job_id` | Character | Unique posting identifier |
-| `job_title` | Character | Job role title |
-| `company` | Character | Company name |
-| `location` | Character | City |
-| `state` | Character | State / Province |
-| `country` | Character | Country (India dominant) |
-| `industry` | Character | Industry sector |
-| `employment_type` | Character | Full-Time / Part-Time / Contract / Internship |
-| `experience_years` | Integer | Required years of experience |
-| `education` | Character | Required education level |
-| `salary_min` | Numeric | Minimum salary (INR) |
-| `salary_max` | Numeric | Maximum salary (INR) |
-| `salary_currency` | Character | INR or USD |
-| `salary_inr` | Numeric | Annual salary in INR |
-| `skills` | Character | Required skills (semicolon-separated) |
-| `skill_count` | Integer | Number of skills required |
-| `posted_date` | Date | Job posting date |
-| `remote_type` | Character | On-Site / Hybrid / Remote |
-| `company_size` | Character | Small / Medium / Large / Enterprise |
-| `job_description` | Character | Short job description |
+| **Why did you use synthetic data instead of scraping?** | To maintain complete statistical control over realistic distributions, introduce documented real-world imperfections for preprocessing demonstrations, and ensure reproducibility without legal or rate-limit constraints. |
+| **Why did you preserve missing salaries instead of imputing them?** | Imputing missing outcomes with group or global medians distorts the conditional distribution of the response variable, artificially depresses residual variance, and biases standard error estimates in regression models. Excluding missing outcomes from regression training preserves unbiased estimators. |
+| **Why report two fit metrics instead of one?** | Distinct Skill Coverage evaluates breadth across the entire role syllabus, whereas Posting-Level Match (≥80%) evaluates how often a candidate qualifies for actual individual job vacancies. Neither represents hiring probability. |
+| **How does the Priority Index avoid data fabrication?** | Every component ($D_{\text{role}}$ and $D_{\text{market}}$) is computed directly from counts of postings in the dataset. The linear weighting ($0.70/0.30$) is an explicit, transparent ranking heuristic, not an arbitrary black-box score. |
+| **Why evaluate models on held-out test data?** | Reporting training accuracy inflates perceived model performance due to potential overfitting. Evaluating on a 20% holdout provides honest, generalized out-of-sample performance metrics ($R^2$, RMSE, precision, F1 score). |
+| **How did you prevent data leakage in logistic regression?** | The high-salary classification threshold was computed exclusively from the 80% training partition's median salary, rather than the entire dataset. This ensures the test set evaluates predictions against an independently established threshold. |
+| **What does Pearson correlation measure here?** | Pearson $r$ measures linear association between numeric variables (e.g., experience vs salary: $r \approx 0.48$). It reflects moderate positive association while acknowledging that real salaries have significant non-linear variance. |
 
 ---
 
-## Methodology
+## 5. System Architecture: CareerLens 2.0 (Decoupled 3-Layer System)
 
-### Data Generation
+In addition to the standalone R Shiny interactive application (`app.R`), CareerLens 2.0 implements an enterprise 3-tier decoupled architecture designed for high reactivity and real-time decision-support:
 
-The dataset is generated using `set.seed(42)` for reproducibility. The generation process:
-1. Defines look-up tables for job titles, locations, companies, industries, skills, etc.
-2. Samples values using `sample()` with realistic probability weights.
-3. Computes salary using a multiplicative model with Gaussian noise.
-4. Deliberately introduces missing values (~3%), duplicates (~0.5%), and text inconsistencies.
-
----
-
-## Data Cleaning
-
-Implemented in `R/data_cleaning.R` via the `load_and_clean()` function.
-
-### Steps
-
-1. **Read CSV** using `readr::read_csv()`.
-2. **Check dimensions** — verify required columns exist.
-3. **Detect duplicates** on business-key columns (title + company + location + experience + skills).
-4. **Remove duplicates** using `duplicated()`.
-5. **Text normalization** via `clean_text()`:
-   - `trimws()` — remove leading/trailing whitespace
-   - `gsub("\\s+", " ", x)` — collapse internal spaces
-   - `tools::toTitleCase(tolower(x))` — normalize case
-6. **Missing value imputation**:
-   - `salary_inr`: group-wise median imputation per job title
-   - `education`, `company_size`, `location`: statistical mode imputation
-   - `skills`: empty string (treated as 0 skills)
-7. **Type conversion**: `as.integer()`, `as.numeric()`, `as.Date()`, `as.factor()`
-8. **Derived columns**: `experience_bin`, `company_size_num`, `location_tier`, `high_salary`, `salary_outlier`
-9. **Outlier flagging** using IQR method (3 × IQR beyond Q1/Q3) — flagged but not removed to preserve data.
-10. **Save clean CSV** to `data/job_market_clean.csv`.
-
----
-
-## Exploratory Data Analysis (EDA)
-
-Performed in the **Overview** and **Salary & Location** tabs.
-
-- Job postings by role (bar chart)
-- Job postings by location (bar chart)
-- Experience distribution (histogram)
-- Employment type distribution (pie chart)
-- Salary distribution (histogram)
-- Interactive filters: location, role, experience level, industry, employment type, remote type
-
----
-
-## Skills Demand Analysis
-
-Implemented in `R/skill_analysis.R`.
-
-**Method:**
-- `tidyr::separate_rows()` explodes the semicolon-delimited skills column into a long-format data frame.
-- Skill frequency is computed with `dplyr::count()`.
-- Demand percentage = (skill job count / total jobs) × 100.
-- Skills are categorised into: Programming Languages, Web & Frameworks, Cloud & DevOps, Database & Data, Analytics & ML, Tools & Practices, Soft Skills, Security, Infrastructure.
-
-**Outputs:**
-- Top 10 / Top 20 skill ranking table (Rank | Skill | Count | Demand %)
-- Role-specific skill demand (filtered by job title)
-- Location-specific skill demand (filtered by location)
-
----
-
-## Salary Statistical Analysis
-
-Implemented in `R/salary_analysis.R` via `calculate_salary_summary()`.
-
-### Measures Computed
-
-| Measure | R Function |
-|---|---|
-| Count | `length()` |
-| Mean | `mean()` |
-| Median | `median()` |
-| Mode | Custom `stat_mode()` |
-| Minimum / Maximum | `min()`, `max()` |
-| Range | `max() - min()` |
-| Variance | `var()` |
-| Standard Deviation | `sd()` |
-| Q1, Q3 | `quantile(0.25)`, `quantile(0.75)` |
-| IQR | `IQR()` |
-| 10th / 90th Percentile | `quantile(0.10)`, `quantile(0.90)` |
-| Coefficient of Variation | `sd / mean × 100` |
-
----
-
-## Correlation Analysis
-
-Implemented in the **Statistics & Correlation** tab.
-
-**Variables analysed:**
-- `experience_years`
-- `salary_inr`
-- `skill_count`
-- `company_size_num` (ordinal encoding of company size)
-
-**Method:**
-- Pearson correlation: `cor(x, method="pearson")`
-- Visualised as a colour-coded heatmap using `corrplot::corrplot()`
-- Interpretations are generated dynamically based on computed r values using `stat_label()` (strong/moderate/weak, positive/negative)
-
----
-
-## Simple Linear Regression
-
-**Model:** `lm(salary_inr ~ experience_years, data=df_model)`
-
-**Outputs:**
-- Intercept and slope coefficients
-- R² (coefficient of determination)
-- p-value for slope coefficient
-- Regression equation as a readable string
-- Scatter plot with regression line (plotly)
-- Coefficient table with standard errors and t-values
-
-**Interpretation:** The slope represents the expected change in annual salary (INR) per additional year of experience.
-
----
-
-## Multiple Linear Regression
-
-**Model:**
 ```
-lm(salary_inr ~ experience_years + skill_count + education +
-                company_size_num + location_tier, data=df_model)
+┌─────────────────────────────────────────────────────────────┐
+│              Layer A: React + TypeScript UI                 │
+│  Vite • Tailwind CSS • Apache ECharts • Zustand • TanStack  │
+│  Port: 5173 (Proxies /api to Node.js backend)               │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTP / JSON
+┌──────────────────────────────▼──────────────────────────────┐
+│           Layer B: Node.js + Express Orchestration          │
+│  TypeScript • In-Memory Caching • API Normalization         │
+│  Port: 3001                                                 │
+└──────────────────────────────┬──────────────────────────────┘
+                               │ HTTP / JSON
+┌──────────────────────────────▼──────────────────────────────┐
+│             Layer C: R 4.6.1 + Plumber API                  │
+│  Pure R Analytical Engine • 6,000 Clean Dataset Records     │
+│  Port: 8001                                                 │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-**Categorical encoding:**
-- `education` and `location_tier` are converted to factors; R creates dummy variables automatically.
-- `company_size_num` is ordinal (Small=1, Medium=2, Large=3, Enterprise=4).
+1. **Layer C (R Plumber Analytical Service - Port 8001)**:
+   - Houses the statistical engine, data structures, and mathematical models in pure R.
+   - 14 REST endpoints (`/health`, `/metadata`, `/market/*`, `/analyze/*`, `/simulate/*`, `/predict/*`, `/data-quality`).
+   - Loads clean dataset and pre-computes statistical models once into memory on startup.
 
-**Outputs:**
-- R², Adjusted R², F-statistic, overall p-value
-- Full coefficient table
-- Actual vs Predicted salary scatter plot
+2. **Layer B (Node.js + Express Middleware - Port 3001)**:
+   - High-throughput API gateway and orchestration middle tier.
+   - In-memory cache for market-wide aggregates with 10-minute TTL to reduce redundant R evaluation.
+   - Normalizes errors and standardizes API responses into `{ success: boolean, data: T, meta?: any }`.
 
----
+3. **Layer A (React + TypeScript Frontend - Port 5173)**:
+   - Modern, reactive, desktop-optimized dashboard with 8 dedicated modules.
+   - Client-side profile state persisted across sessions with Zustand.
+   - Interactive data visualizations with Apache ECharts (Salary distribution, radar charts, skill co-occurrence).
+   - Instant response without full-page reloads.
 
-## Logistic Regression
+4. **Standalone Shiny Fallback (`app.R`)**:
+   - Preserved 100% operational as a single-file R Shiny application for environments where Node.js is not running.
 
-**Objective:** Classify whether a job offers a high salary (above median) or low/mid salary.
-
-**Threshold:** Median of `salary_inr` in the clean dataset.
-- `high_salary = 1` if `salary_inr >= median`
-- `high_salary = 0` otherwise
-
-**Model:**
-```
-glm(high_salary ~ experience_years + skill_count + education + company_size_num,
-    family = binomial(link="logit"), data=df_model)
-```
-
-**Outputs:**
-- Logit coefficients (log-odds)
-- Model accuracy, sensitivity, specificity (from confusion matrix)
-- Probability prediction for user-entered candidate profile
-- Predicted class: "High Salary" or "Low / Mid Salary"
-
----
-
-## Skill Gap Methodology
-
-Implemented in `R/skill_analysis.R` (role_skill_demand) and the **Skill Gap Analyzer** tab.
-
-**Steps:**
-1. User selects their current skills and desired job role.
-2. System calls `role_skill_demand(df_clean, target_role)` to get actual market skill demand for that role.
-3. Each required skill is classified as **Matched** (candidate has it) or **Missing** (candidate lacks it).
-4. Missing skills are ranked by market demand percentage (derived from the dataset — not hard-coded).
-5. Top 5 missing skills by demand are presented as **Recommended Skills to Learn**.
-6. Gap Score = (missing skills / total required skills) × 100%.
-
----
-
-## Results
-
-Key findings from the generated dataset (actual values shown in app):
-
-- Bengaluru, Hyderabad, and Chennai account for the largest share of job postings.
-- SQL, Python, and Git consistently rank among the top 5 most in-demand skills.
-- Data Scientist and Machine Learning Engineer roles command the highest median salaries.
-- Pearson correlation between experience and salary is moderate positive (typically r ≈ 0.40–0.55), reflecting real-world noise.
-- Simple linear regression shows significant positive slope for experience → salary (p < 0.001).
-- Multiple regression with all predictors achieves noticeably higher R² than the simple model.
-- Logistic regression achieves ~68–72% accuracy in classifying high/low salary jobs.
-
-*(Exact values are computed live from the dataset when the app runs.)*
-
----
-
-## Conclusion
-
-CareerLens successfully demonstrates the full ITA04 statistical analysis pipeline on a realistic job market dataset:
-- Data cleaning and preprocessing in R
-- Descriptive statistics and EDA
-- Correlation analysis
-- Simple, Multiple, and Logistic Regression
-- Interactive Shiny-based presentation
-
-The Skill Gap Analyzer provides a practical, data-driven tool that job seekers can use to prioritize their learning based on actual market demand.
-
----
-
-## Limitations
-
-1. The dataset is synthetically generated and does not represent real job postings.
-2. Salary predictions carry uncertainty (reflected in the 95% prediction interval shown in the app).
-3. Skill demand is based on skill frequency in job descriptions, which may not perfectly reflect actual hiring decisions.
-4. The logistic regression model uses a binary threshold (median salary); real-world classification may require more nuanced thresholds.
-5. The dataset covers a snapshot period (April 2025 – October 2026) and does not reflect long-term market trends.
-
----
-
-## Future Scope
-
-1. Integrate a real job-posting dataset (Kaggle, LinkedIn, etc.) with proper licensing.
-2. Add time-series analysis of skill demand and salary trends over months/years.
-3. Use clustering (k-means) to group job roles by skill similarity.
-4. Implement a resume parser that auto-fills the Skill Gap Analyzer from a PDF resume.
-5. Add a PDF/HTML export for the analysis report.
-6. Deploy the Shiny app to shinyapps.io for web access.

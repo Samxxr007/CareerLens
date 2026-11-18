@@ -1,0 +1,64 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@theme {
+  --color-navy-900: #17324D;
+  --color-navy-800: #1E4064;
+  --color-navy-700: #25507D;
+  --color-brand-blue: #1E6091;
+  --color-brand-teal: #06A88A;
+  --color-brand-bg: #F6F8FA;
+  --color-brand-surface: #FFFFFF;
+  --color-brand-border: #E3E8EF;
+  --color-brand-textPrimary: #182433;
+  --color-brand-textSecondary: #687789;
+  --color-brand-success: #16865D;
+  --color-brand-warning: #D98C21;
+  --color-brand-danger: #D64545;
+}
+
+/* Explicit fallback utilities for brand design system */
+.bg-navy-900 { background-color: #17324D !important; }
+.bg-navy-800 { background-color: #1E4064 !important; }
+.bg-navy-700 { background-color: #25507D !important; }
+.bg-brand-blue { background-color: #1E6091 !important; }
+.bg-brand-teal { background-color: #06A88A !important; }
+.bg-brand-bg { background-color: #F6F8FA !important; }
+.bg-brand-surface { background-color: #FFFFFF !important; }
+.text-brand-blue { color: #1E6091 !important; }
+.text-brand-teal { color: #06A88A !important; }
+.text-brand-textPrimary { color: #182433 !important; }
+.text-brand-textSecondary { color: #687789 !important; }
+.border-brand-border { border-color: #E3E8EF !important; }
+.border-brand-blue { border-color: #1E6091 !important; }
+
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: #182433;
+  background-color: #F6F8FA;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #F6F8FA;
+  color: #182433;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

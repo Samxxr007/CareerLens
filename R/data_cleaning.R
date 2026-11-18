@@ -27,12 +27,14 @@ clean_text <- function(x) {
 # load_and_clean()
 # Main preprocessing pipeline. Reads raw CSV, cleans, and writes clean CSV.
 # Returns the cleaned data frame.
+# IMPORTANT: Missing salary outcomes are preserved as NA (no silent imputation)
+# to avoid biasing regression and salary predictive models.
 # -----------------------------------------------------------------------------
 load_and_clean <- function(raw_path    = "data/job_market.csv",
                             clean_path  = "data/job_market_clean.csv",
                             force_regen = FALSE) {
 
-  # Return cached clean data if already generated
+  # Return cached clean data if already generated and not forced
   if (!force_regen && file.exists(clean_path)) {
     message("Loading cached clean dataset from: ", clean_path)
     df <- readr::read_csv(clean_path, show_col_types=FALSE)
@@ -51,7 +53,6 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
   df <- df_raw
 
   # ------ Step 2: Check structure ------
-  # Ensure key columns exist
   required_cols <- c("job_id","job_title","company","location","salary_inr",
                      "experience_years","skills","employment_type","education")
   missing_cols <- setdiff(required_cols, names(df))
@@ -60,8 +61,6 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
   }
 
   # ------ Step 3: Detect and remove duplicates ------
-  n_before <- nrow(df)
-  # Duplicates on key business columns (not job_id which may differ for _DUP rows)
   dup_cols  <- c("job_title","company","location","experience_years","skills")
   dupe_mask <- duplicated(df[, dup_cols])
   n_dupes   <- sum(dupe_mask)
@@ -69,33 +68,19 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
   message("Duplicates removed: ", n_dupes, " | Rows after dedup: ", nrow(df))
 
   # ------ Step 4: Text normalization ------
-  df$job_title    <- clean_text(df$job_title)
-  df$company      <- clean_text(df$company)
-  df$location     <- clean_text(df$location)
-  df$state        <- clean_text(df$state)
-  df$industry     <- clean_text(df$industry)
+  df$job_title       <- clean_text(df$job_title)
+  df$company         <- clean_text(df$company)
+  df$location        <- clean_text(df$location)
+  df$state           <- clean_text(df$state)
+  df$industry        <- clean_text(df$industry)
   df$employment_type <- clean_text(df$employment_type)
-  df$education    <- clean_text(df$education)
-  df$remote_type  <- clean_text(df$remote_type)
-  df$company_size <- clean_text(df$company_size)
+  df$education       <- clean_text(df$education)
+  df$remote_type     <- clean_text(df$remote_type)
+  df$company_size    <- clean_text(df$company_size)
 
   # ------ Step 5: Handle missing values ------
-
-  # salary_inr: impute missing with median of same job_title group
-  df <- df |>
-    dplyr::group_by(job_title) |>
-    dplyr::mutate(
-      salary_inr = dplyr::if_else(
-        is.na(salary_inr),
-        median(salary_inr, na.rm=TRUE),
-        as.numeric(salary_inr)
-      )
-    ) |>
-    dplyr::ungroup()
-
-  # Remaining NA salary_inr (titles with all-NA) → global median
-  global_salary_median <- median(df$salary_inr, na.rm=TRUE)
-  df$salary_inr[is.na(df$salary_inr)] <- global_salary_median
+  # Flag missing salary indicators — PRESERVE NAs for modeling integrity!
+  df$salary_missing <- as.integer(is.na(df$salary_inr))
 
   # education: impute with mode
   edu_mode <- stat_mode(df$education)
@@ -114,14 +99,17 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
 
   # ------ Step 6: Type conversion ------
   df$experience_years <- as.integer(df$experience_years)
-  df$salary_inr       <- as.numeric(df$salary_inr)
+  df$salary_inr       <- as.numeric(df$salary_inr)  # Preserves NAs
   df$salary_min       <- as.numeric(df$salary_min)
   df$salary_max       <- as.numeric(df$salary_max)
   df$posted_date      <- as.Date(df$posted_date)
-  df$skill_count      <- as.integer(df$skill_count)
 
-  # Recompute skill_count after imputation
-  df$skill_count <- sapply(strsplit(df$skills, ";"), function(s) sum(nzchar(trimws(s))))
+  # Recompute skill_count using distinct skills per posting
+  df$skill_count <- sapply(strsplit(df$skills, ";"), function(s) {
+    clean_s <- trimws(s)
+    clean_s <- clean_s[nzchar(clean_s)]
+    length(unique(clean_s))
+  })
 
   # ------ Step 7: Factor columns ------
   df$job_title       <- as.factor(df$job_title)
@@ -136,23 +124,26 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
   df$company_size_num <- company_size_num(df$company_size)
   df$location_tier    <- location_tier(df$location)
 
-  # high_salary flag — 1 if salary_inr >= median (used for logistic regression)
-  salary_median_threshold <- median(df$salary_inr, na.rm=TRUE)
-  df$high_salary <- as.integer(df$salary_inr >= salary_median_threshold)
+  # high_salary flag — defined on non-missing salaries
+  salary_median_threshold <- median(df$salary_inr, na.rm = TRUE)
+  df$high_salary <- ifelse(is.na(df$salary_inr), NA_integer_,
+                           as.integer(df$salary_inr >= salary_median_threshold))
 
   # ------ Step 9: Outlier detection (flag only, do not remove) ------
-  q1  <- quantile(df$salary_inr, 0.25, na.rm=TRUE)
-  q3  <- quantile(df$salary_inr, 0.75, na.rm=TRUE)
+  q1  <- quantile(df$salary_inr, 0.25, na.rm = TRUE)
+  q3  <- quantile(df$salary_inr, 0.75, na.rm = TRUE)
   iqr <- q3 - q1
-  df$salary_outlier <- as.integer(
-    df$salary_inr < (q1 - 3 * iqr) | df$salary_inr > (q3 + 3 * iqr)
+  df$salary_outlier <- ifelse(
+    is.na(df$salary_inr), 0L,
+    as.integer(df$salary_inr < (q1 - 3 * iqr) | df$salary_inr > (q3 + 3 * iqr))
   )
-  n_outliers <- sum(df$salary_outlier, na.rm=TRUE)
+  n_outliers <- sum(df$salary_outlier, na.rm = TRUE)
   message("Salary outliers flagged (not removed): ", n_outliers)
 
   # ------ Step 10: Validate numeric fields ------
   df <- df[!is.na(df$experience_years) & df$experience_years >= 0, ]
-  df <- df[df$salary_inr > 0, ]
+  # Retain both non-missing positive salaries and legitimate missing salary records
+  df <- df[is.na(df$salary_inr) | df$salary_inr > 0, ]
 
   clean_rows <- nrow(df)
   message("Clean rows: ", clean_rows)
@@ -171,23 +162,25 @@ load_and_clean <- function(raw_path    = "data/job_market.csv",
 data_quality_report <- function(raw_path  = "data/job_market.csv",
                                 clean_path = "data/job_market_clean.csv") {
 
-  df_raw   <- readr::read_csv(raw_path,   show_col_types=FALSE)
-  df_clean <- readr::read_csv(clean_path, show_col_types=FALSE)
+  df_raw   <- readr::read_csv(raw_path,   show_col_types = FALSE)
+  df_clean <- readr::read_csv(clean_path, show_col_types = FALSE)
 
   # Per-column missing in raw
   na_counts <- sapply(df_raw, function(x) sum(is.na(x)))
 
   # Duplicate rows in raw (on key cols)
   dup_cols  <- c("job_title","company","location","experience_years","skills")
-  n_dupes   <- sum(duplicated(df_raw[, intersect(dup_cols, names(df_raw))]))
+  n_dupes   <- sum(duplicated(df_raw[, dup_cols]))
 
   list(
-    raw_rows    = nrow(df_raw),
-    raw_cols    = ncol(df_raw),
-    n_dupes     = n_dupes,
-    na_counts   = na_counts,
-    total_na    = sum(na_counts),
-    clean_rows  = nrow(df_clean),
-    clean_cols  = ncol(df_clean)
+    raw_rows             = nrow(df_raw),
+    raw_cols             = ncol(df_raw),
+    n_dupes              = n_dupes,
+    na_counts            = na_counts,
+    total_na             = sum(na_counts),
+    clean_rows           = nrow(df_clean),
+    clean_cols           = ncol(df_clean),
+    salary_missing_count = sum(is.na(df_clean$salary_inr)),
+    salary_valid_count   = sum(!is.na(df_clean$salary_inr))
   )
 }

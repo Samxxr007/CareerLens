@@ -1,0 +1,19 @@
+{
+  "name": "careerlens",
+  "version": "2.0.0",
+  "description": "CareerLens 2.0 — Career Intelligence, Market Analytics & Skill Decision Engine",
+  "private": true,
+  "scripts": {
+    "start:r": "node scripts/start-r.js",
+    "start:server": "npm run dev --prefix server",
+    "start:client": "npm run dev --prefix client",
+    "dev": "concurrently -k -p \"[{name}]\" -n \"R-API,NODE-API,CLIENT\" -c \"magenta,cyan,green\" \"npm run start:r\" \"npm run start:server\" \"npm run start:client\"",
+    "build:server": "npm run build --prefix server",
+    "build:client": "npm run build --prefix client",
+    "build": "npm run build:server && npm run build:client",
+    "test:r": "node scripts/test-r.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

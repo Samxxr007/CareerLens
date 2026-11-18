@@ -58,29 +58,23 @@ remote_weights <- c(55, 30, 15)
 company_sizes <- c("Small", "Medium", "Large", "Enterprise")
 size_weights  <- c(20, 30, 30, 20)
 
-# Company name pools (realistic-sounding Indian + global tech companies)
-companies_india <- c(
-  "Infosys", "TCS", "Wipro", "HCL Technologies", "Tech Mahindra",
-  "Cognizant", "Capgemini India", "Mphasis", "Hexaware Technologies",
-  "LTIMindtree", "Persistent Systems", "Birlasoft", "Mastech Digital",
-  "Zensar Technologies", "NIIT Technologies", "Coforge", "Firstsource",
-  "Cyient", "Sonata Software", "Kellton Tech", "Subex", "Infoedge",
-  "Freshworks", "Zoho Corporation", "Chargebee", "Razorpay", "PhonePe",
-  "Paytm", "PolicyBazaar", "Swiggy", "Zomato", "Meesho", "Groww",
-  "BrowserStack", "Druva", "Postman", "Unacademy", "Byju's", "Nykaa",
-  "Ola", "Ather Energy", "Urban Company", "Slice", "Cred", "Zerodha",
-  "Juspay", "Fractal Analytics", "MuSigma", "Latent View Analytics",
-  "Sigmoid", "Tiger Analytics", "Dataweave", "CloudSEK", "Darwinbox",
-  "Haptik", "Leadsquared", "Whatfix", "Hasura", "MinIO India",
-  "GlobalLogic India", "Sapient India", "EPAM Systems India"
+# Company name pools (52 varied, realistic yet unambiguously fictional employers)
+fictional_companies <- c(
+  "Apex Analytics Labs", "NexaTech Solutions", "DataSphere Informatics", "QuantumLogic Systems",
+  "CloudScale Technologies", "Innovatech Digital", "Zenith Systems Global", "Acuity Informatics",
+  "StrataData Works", "VectorPoint Systems", "Synergy Software Labs", "Pinnacle Data Works",
+  "AlphaCloud Services", "BlueShift Analytics", "Cognitive Forge Technologies", "Hyperion Dynamics",
+  "OmniTech Solutions", "Prisma Data Systems", "Stellar Dynamics", "Horizon Infotech",
+  "Crestline Systems", "Synthetix Labs", "Altis Infotech", "Equinox Software",
+  "Vanguard Data Systems", "MatrixPoint Tech", "Nexus Informatics", "OptimaCloud Labs",
+  "Silverline Technologies", "TrueNorth Digital", "Kinetix Analytics", "AeroSoft Solutions",
+  "CoreLogic Analytics", "Summit Tech Labs", "Velocity Software", "Element Data Systems",
+  "Meridian Technologies", "Beacon Informatics", "Polaris Cloud Works", "Integra Analytics",
+  "Spectra Software", "Cobalt Data Labs", "Pioneer Infotech", "LogicGate Systems",
+  "Astral Technologies", "CipherPoint Solutions", "Catalyst Software", "Zenith DataWorks",
+  "DynamicScale Systems", "TerraTech Global", "Orion Cloud Labs", "Apex Digital Partners"
 )
-companies_global <- c(
-  "Accenture", "IBM", "Deloitte", "PwC", "EY Technology",
-  "Microsoft", "Google", "Amazon", "Meta", "Salesforce",
-  "SAP", "Oracle", "Adobe", "Cisco", "Dell Technologies",
-  "HP Enterprise", "Siemens", "Bosch", "ABB", "ThoughtWorks"
-)
-all_companies <- c(companies_india, companies_global)
+all_companies <- fictional_companies
 
 # Locations with realistic Indian dominance
 locations_india <- c(
@@ -295,7 +289,7 @@ df <- data.frame(
   education       = edu_col,
   salary_min      = salary_min_col,
   salary_max      = salary_max_col,
-  salary_currency = ifelse(countries == "India", "INR", "USD"),
+  salary_currency = "INR",  # Standardized to INR across all domestic & synthetic intl benchmarks
   salary_inr      = salary_inr_col,
   skills          = skills_col,
   skill_count     = skill_count_col,
